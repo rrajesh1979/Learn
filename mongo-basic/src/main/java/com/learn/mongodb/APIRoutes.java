@@ -1,5 +1,7 @@
 package com.learn.mongodb;
 
+import com.google.gson.Gson;
+import com.learn.models.Book;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import org.bson.Document;
@@ -14,7 +16,9 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 public class APIRoutes {
     private final Logger logger;
@@ -107,5 +111,23 @@ public class APIRoutes {
         }
 
         return new Document("ok", true).append("bookDoc", bookDoc).toJson(plainJSON);
+    }
+
+    public String getBooks(Request req, Response res) {
+        bookDAL = new BookDAL(mongoClient);
+        List<Book> books = bookDAL.getBooks();
+        ArrayList<Document> result = new ArrayList<>();
+
+        try {
+            for (Book book: books) {
+                logger.info(book.toJson());
+                result.add(book.toDocument());
+            }
+        } catch (Exception e) {
+            lastError = e.getMessage();
+            logger.debug("Error building return response for /books");
+        }
+
+        return new Gson().toJson(result);
     }
 }

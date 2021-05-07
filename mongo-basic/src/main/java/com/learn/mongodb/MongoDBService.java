@@ -37,6 +37,7 @@ public class MongoDBService     {
             get("/home",(req,res) -> apiRoutes.getHome(req,res));
             put("/books",(req,res) -> apiRoutes.addBook(req,res));
             get("/books/*",(req,res) -> apiRoutes.getBook(req,res));
+            get("/books",(req,res) -> apiRoutes.getBooks(req,res));
 
             after((req, res) -> {
                 res.type("application/json");

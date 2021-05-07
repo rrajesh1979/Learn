@@ -1,5 +1,6 @@
 package com.learn.mongodb;
 
+import com.learn.models.Book;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
@@ -7,6 +8,10 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -116,5 +121,27 @@ public class BookDAL {
             return new Document("ok", false).append("error", "Error finding book");
         }
         return bookDoc;
+    }
+
+    public List<Book> getBooks() {
+        List<Document> bookDocs = new ArrayList<>();
+        List<Book> books = new ArrayList<>();
+
+        try {
+            bookCollection
+                    .find()
+                    .iterator()
+                    .forEachRemaining(bookDocs::add);
+
+            books = bookDocs
+                    .stream()
+                    .map(BookDocumentMapper::mapDocumentToBook)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            lastError = e.getMessage();
+            logger.debug("Error fetching book list");
+        }
+
+        return books;
     }
 }
