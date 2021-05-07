@@ -11,8 +11,11 @@ URLs
 GET http://localhost:5000/home
 
 PUT http://localhost:5000/books
+
     bookId
+
     bookName
+
     authorName
 
 GET http://localhost:5000/books/1003
