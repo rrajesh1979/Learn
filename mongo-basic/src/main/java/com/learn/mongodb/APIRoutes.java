@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.learn.models.Book;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
@@ -23,6 +24,7 @@ import java.util.List;
 public class APIRoutes {
     private final Logger logger;
     private final MongoClient mongoClient;
+    private MongoCollection<Document> bookCollection;
 
     BookDAL bookDAL;
 
@@ -42,9 +44,44 @@ public class APIRoutes {
         this.mongoClient = mongoClient;
 
         //Pre-flight check
-        mongoClient.getDatabase("any").runCommand(new Document("ping", 1));
-        logger.info("Connection to MongoDB tested");
+        if (!preFlightChecks()) {
+            logger.info("Pre-flight checks failed");
+        } else {
+            logger.info("Pre-flight checks successful");
+        }
+    }
 
+    private boolean preFlightChecks() {
+        try {
+            mongoClient.getDatabase("any").runCommand(new Document("ping", 1));
+            logger.info("Connection to MongoDB tested");
+            boolean bookIdIndexPresent = false;
+            boolean authorNameIndexPresent = false;
+
+            bookCollection = this.mongoClient.getDatabase(DBConstants.DB).getCollection(DBConstants.BOOKS_COLLECTION);
+            for (Document index : bookCollection.listIndexes()) {
+                System.out.println(index.toJson());
+                if (index.get("name") == "authorName_1") {
+                    authorNameIndexPresent = true;
+                }
+                if (index.get("name") == "bookId_1_bookName_1") {
+                    bookIdIndexPresent = true;
+                }
+            }
+            if (bookIdIndexPresent && authorNameIndexPresent) {
+                logger.info("Required indexes present");
+            } else {
+                logger.info("Required indexes missing");
+                return false;
+            }
+        } catch (Exception e) {
+            lastError = e.getMessage();
+            logger.error("Error completing pre-flight checks");
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     public String getHome(Request req, Response res) {
@@ -57,12 +94,14 @@ public class APIRoutes {
         String authorName;
         boolean status;
 
+        Document requestBody;
         Document bookDoc = new Document(BookDAL.SCHEMA_VERSION, 1);
 
         try {
-            bookId = Integer.parseInt(req.queryParams("bookId"));
-            bookName = req.queryParams("bookName");
-            authorName = req.queryParams("authorName");
+            requestBody = Document.parse(req.body());
+            bookId = Integer.parseInt(requestBody.getString(BookDAL.BOOK_ID));
+            bookName = requestBody.getString(BookDAL.BOOK_NAME);
+            authorName = requestBody.getString(BookDAL.AUTHOR_NAME);
 
             bookDoc.append(BookDAL.BOOK_ID, bookId);
             bookDoc.append(BookDAL.BOOK_NAME, bookName);
@@ -70,6 +109,7 @@ public class APIRoutes {
 
         } catch (Exception e) {
             lastError = e.getMessage();
+            logger.error("Error parsing query params");
             return new Document("error", true).append("error", "Error parsing query params").toJson();
         }
 
@@ -78,12 +118,15 @@ public class APIRoutes {
             status = bookDAL.addBook();
         } catch (MongoException e) {
             lastError = e.getMessage();
+            logger.error("Error adding book");
             return new Document("error", true).append("error", "Error adding book").toJson();
         }
 
         if (!status) {
+            logger.error("Error adding book");
             return new Document("ok", false).append("error", "Error adding book").toJson(plainJSON);
         } else {
+            logger.error("Book added successfully");
             return new Document("ok", true).append("book", bookDoc).toJson(plainJSON);
         }
 
