@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<head>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v1.10.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v1.10.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://s3.amazonaws.com/stitch-sdks/js/bundles/4.6.0/stitch.js"></script>
+</head>
+<html>
+    <body style="margin: 0">
+        <div id="map" style="width: 100vw; height: 100vh"></div>
+        <script>
+            const client = stitch.Stitch.initializeDefaultAppClient("mapview-gjryn");
+            const db = client.getServiceClient(stitch.RemoteMongoClient.factory, "mongodb-atlas").db("learn");
+            let currentLocationMarker;
+
+            client.auth.loginWithCredential(new stitch.AnonymousCredential());
+
+            mapboxgl.accessToken = "pk.eyJ1IjoicnJhamVzaDE5NzkiLCJhIjoiY2tvZjR5cGc1MGcxejJwczNnYXoxZGRycCJ9.XN8YRs9yOTbcOujwY5jQQg";
+            let map = new mapboxgl.Map({
+                container: "map",
+                style: "mapbox://styles/mapbox/streets-v11",
+                center: [-121.4252, 37.7397],
+                zoom: 9
+            });
+
+            map.on("load", async () => {
+                let fences = await db.collection("geofences").find({
+                    region: {
+                        $near: {
+                            $geometry: {
+                                type: "Point",
+                                coordinates: [-121.4252, 37.7397]
+                            },
+                            $maxDistance: 50000
+                        }
+                    }
+                }).asArray();
+                currentLocationMarker = new mapboxgl.Marker().setLngLat([-121.29473735351542, 37.94575186984845]).addTo(map);
+                fences.forEach(fence => {
+                    map.addSource(fence.name, {
+                        "type": "geojson",
+                        "data": {
+                            "type": "Feature",
+                            "geometry": fence.region
+                        }
+                    });
+                    map.addLayer({
+                        "id": fence.name,
+                        "type": "fill",
+                        "source": fence.name,
+                        "layout": {},
+                        "paint": {
+                            "fill-color": "#088",
+                            "fill-opacity": 0.8
+                        }
+                    });
+                });
+            });
+
+            map.on("click", async (e) => {
+                currentLocationMarker.setLngLat([e.lngLat.lng, e.lngLat.lat]);
+                let result = await db.collection("geofences").find({
+                    region: {
+                        $geoIntersects: {
+                            $geometry: {
+                                type: "Point",
+                                coordinates: [e.lngLat.lng, e.lngLat.lat]
+                            }
+                        }
+                    }
+                }, { projection: { name: 1 }}).asArray();
+                if(result.length > 0) {
+                    alert(`Within the ${result[0].name} fence!`);
+                }
+            });
+        </script>
+    </body>
+</html>
