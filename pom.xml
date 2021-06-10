@@ -10,12 +10,14 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>mongo-basic</module>
+        <module>lombok-learn</module>
     </modules>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <learn.lombok.version>1.18.20</learn.lombok.version>
     </properties>
 
     <build>
@@ -125,10 +127,18 @@
                 <artifactId>jul-to-slf4j</artifactId>
                 <version>1.7.25</version>
             </dependency>
+
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>3.10</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/org.projectlombok/learn.lombok -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${learn.lombok.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
