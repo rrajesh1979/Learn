@@ -2,16 +2,19 @@ package com.learn;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.util.logging.LogManager;
 
+@Slf4j
 public class LombokFirst {
 
     static final String VERSION = "0.0.1";
-    static Logger logger;
 
     @Getter
     @Setter
@@ -23,19 +26,24 @@ public class LombokFirst {
 
     public static void main(String[] args) {
 
-        LogManager.getLogManager().reset();
-        SLF4JBridgeHandler.removeHandlersForRootLogger();
-        SLF4JBridgeHandler.install();
-
-        logger = LoggerFactory.getLogger(LombokFirst.class);
-        logger.info("Lombok First version :: {}", VERSION);
+        log.info("Lombok First version & using Lombok @Slf4j :: {}", VERSION);
 
         LombokFirst lombokFirstInstance = new LombokFirst();
         lombokFirstInstance.setFirstName("Mary");
         lombokFirstInstance.setLastName("Joe");
 
-        logger.info("Using Lombok Getter & Setter :: {}, {}",
+        log.info("Using Lombok Getter & Setter :: {}, {}",
                 lombokFirstInstance.getLastName(),
                 lombokFirstInstance.getFirstName());
+
+        try {
+            lombokFirstInstance.nonNullFunctionArgument(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void nonNullFunctionArgument(@NonNull String firstName) {
+        this.setFirstName(firstName);
     }
 }

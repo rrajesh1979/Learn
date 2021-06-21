@@ -1,8 +1,10 @@
 package com.learn.mongodb;
 
+import com.google.common.base.Stopwatch;
 import com.learn.models.Book;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -11,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -92,14 +95,44 @@ public class BookDAL {
             return false;
         }
 
-        Document bookDoc = new Document(BOOK_ID, bookId)
+        Document bookDocW1 = new Document(BOOK_ID, bookId)
                 .append(BOOK_NAME, bookName)
                 .append(AUTHOR_NAME, authorName)
                 .append(SCHEMA_VERSION, schemaVersion);
 
+        Document bookDocWM = new Document(BOOK_ID, bookId)
+                .append(BOOK_NAME, bookName)
+                .append(AUTHOR_NAME, authorName)
+                .append(SCHEMA_VERSION, schemaVersion);
+
+
         try {
-            bookCollection.insertOne(bookDoc);
-            parseDocument(bookDoc);
+            // Creates and starts a new stopwatch
+            Stopwatch stopwatch = Stopwatch.createStarted();
+
+            bookCollection
+                    .withWriteConcern(WriteConcern.W1)
+                    .insertOne(bookDocW1);
+
+            stopwatch.stop();
+            // get elapsed time, expressed in milliseconds
+            long timeElapsed = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+
+            logger.info("Execution time in milliseconds ACKNOWLEDGED: {}", timeElapsed);
+
+            // Creates and starts a new stopwatch
+            stopwatch = Stopwatch.createStarted();
+
+            bookCollection
+                    .withWriteConcern(WriteConcern.MAJORITY)
+                    .insertOne(bookDocWM);
+
+            stopwatch.stop();
+            // get elapsed time, expressed in milliseconds
+            timeElapsed = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+
+            logger.info("Execution time in milliseconds MAJORITY: {}", timeElapsed);
+
         } catch (MongoException e) {
             lastError = e.getMessage();
             return false;
