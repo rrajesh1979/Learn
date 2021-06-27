@@ -11,6 +11,7 @@
     <modules>
         <module>mongo-basic</module>
         <module>lombok-learn</module>
+        <module>learn-java-reactive</module>
     </modules>
 
     <properties>
