@@ -9,7 +9,7 @@ public class SimpleREST {
 
     @GetMapping(path = "/api/hello/{name}")
     public String hello(@PathVariable(value = "name") String name) {
-        return "Hello " + name + " from Spring AOP!";
+        return "Hello " + name + " :: From Spring AOP!";
     }
 
     @GetMapping(path = "/api/book/{Id}")
