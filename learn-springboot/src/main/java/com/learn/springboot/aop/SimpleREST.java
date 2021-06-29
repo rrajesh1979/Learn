@@ -7,11 +7,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class SimpleREST {
 
+    @LogMethod
     @GetMapping(path = "/api/hello/{name}")
     public String hello(@PathVariable(value = "name") String name) {
         return "Hello " + name + " :: From Spring AOP!";
     }
 
+    @LogMethod
     @GetMapping(path = "/api/book/{Id}")
     public String getBookDetails(@PathVariable(value = "Id") String id) {
         return "Book details for " + id + " !";
