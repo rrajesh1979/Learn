@@ -1,29 +1,21 @@
-package com.learn.springboot.aop;
+package com.learn.springboot.aop.aspects;
 
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
-
-import java.util.Arrays;
 
 @Slf4j
 @Aspect
 @Component
-public class LoggingAspect {
-
-    @Before("@annotation(com.learn.springboot.aop.LogMethod)")
-    public void logMethodExecution(JoinPoint joinPoint) {
-        String method = joinPoint.getSignature().getName();
-        String params = Arrays.toString(joinPoint.getArgs());
-        log.info("Method [{}] gets called with parameters {}", method, params);
+public class PerformanceAspect {
+    @Pointcut("@annotation(com.learn.springboot.aop.annotations.LogPerformance)")
+    public void allMethods() {
     }
 
-    @Around("@annotation(com.learn.springboot.aop.LogMethod)")
+    @Around("allMethods()")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
         long startTime = System.currentTimeMillis();
         Object proceed = joinPoint.proceed();
@@ -31,5 +23,4 @@ public class LoggingAspect {
         log.info("Execution took [{}ms]", duration);
         return proceed;
     }
-
 }

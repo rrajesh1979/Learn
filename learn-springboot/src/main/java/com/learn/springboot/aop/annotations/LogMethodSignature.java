@@ -1,4 +1,4 @@
-package com.learn.springboot.aop;
+package com.learn.springboot.aop.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,5 +7,5 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface LogMethod {
+public @interface LogMethodSignature {
 }
